@@ -7,11 +7,6 @@ import { createClient } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 import { Loader2, Mail, Lock } from 'lucide-react'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -22,6 +17,10 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      )
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
       router.push('/dashboard')

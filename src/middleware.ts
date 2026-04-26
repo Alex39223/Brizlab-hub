@@ -1,51 +1,30 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
   const { pathname } = request.nextUrl
 
-  // Public routes
-  const publicRoutes = ['/', '/login', '/register', '/api/bridge/webhooks']
-  const isPublic = publicRoutes.some(r => pathname === r || pathname.startsWith('/api/v1'))
+  // Public routes that don't need auth
+  const publicRoutes = ['/', '/login', '/register']
+  const isPublic = publicRoutes.includes(pathname) || 
+    pathname.startsWith('/api/bridge/webhooks') ||
+    pathname.startsWith('/api/v1') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon')
 
-  if (!user && !isPublic) {
+  if (isPublic) {
+    return NextResponse.next()
+  }
+
+  // Check for Supabase session cookie
+  const sessionCookie = request.cookies.get('sb-nubbdzaexgphedaqlnsu-auth-token')
+  
+  if (!sessionCookie) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && (pathname === '/login' || pathname === '/register')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
-
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 export const config = {

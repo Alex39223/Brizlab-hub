@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow all these routes without auth
   const isPublic = 
     pathname === '/' ||
     pathname === '/login' ||
@@ -16,7 +15,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for session cookie
   const hasSession = 
     request.cookies.get('sb-nubbdzaexgphedaqlnsu-auth-token') ||
     request.cookies.get('sb-access-token') ||

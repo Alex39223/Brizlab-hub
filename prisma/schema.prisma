@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum KYCStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NOT_STARTED
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum TransactionType {
+  ONRAMP
+  OFFRAMP
+}
+
+model User {
+  id                String            @id @default(cuid())
+  email             String            @unique
+  name              String?
+  role              UserRole          @default(USER)
+  kycStatus         KYCStatus         @default(NOT_STARTED)
+  bridgeCustomerId  String?           @unique
+  supabaseUserId    String?           @unique
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  virtualAccounts   VirtualAccount[]
+  transactions      Transaction[]
+  apiKeys           ApiKey[]
+
+  @@map("users")
+}
+
+model VirtualAccount {
+  id                    String   @id @default(cuid())
+  userId                String
+  bridgeAccountId       String   @unique
+  currency              String   // "usd" | "eur"
+  status                String   @default("activated")
+  bankName              String?
+  bankAddress           String?
+  accountNumber         String?
+  routingNumber         String?
+  iban                  String?
+  bic                   String?
+  accountHolderName     String?
+  paymentRails          String[] // e.g. ["ach_push", "wire"]
+  destinationCurrency   String   // "usdc"
+  destinationRail       String   // "ethereum"
+  destinationAddress    String
+  developerFeePercent   String   @default("1.0")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("virtual_accounts")
+}
+
+model Transaction {
+  id               String            @id @default(cuid())
+  userId           String
+  virtualAccountId String?
+  bridgeDepositId  String?           @unique
+  type             TransactionType   @default(ONRAMP)
+  status           TransactionStatus @default(PENDING)
+  sourceCurrency   String            // "usd" | "eur"
+  sourceAmount     String
+  destCurrency     String            // "usdc"
+  destAmount       String?
+  destAddress      String
+  txHash           String?
+  paymentRail      String?           // "ach_push" | "wire" | "sepa"
+  senderName       String?
+  exchangeFee      String?
+  developerFee     String?
+  gasFeee          String?
+  rawWebhook       Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  virtualAccount VirtualAccount? @relation(fields: [virtualAccountId], references: [id])
+
+  @@map("transactions")
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  keyHash     String    @unique
+  keyPrefix   String    // First 8 chars for display
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  isActive    Boolean   @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  eventType   String
+  bridgeId    String?
+  payload     Json
+  processed   Boolean  @default(false)
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@map("webhook_events")
+}

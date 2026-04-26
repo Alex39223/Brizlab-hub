@@ -29,10 +29,11 @@
     "sonner": "^1.7.0",
     "jose": "^5.9.6"
   },
-  "devDependencies": {
+   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",

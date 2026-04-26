@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -38,49 +40,29 @@ export default function LoginPage() {
         <h1 className="font-display text-2xl font-bold text-zinc-50">Welcome back</h1>
         <p className="text-sm text-zinc-500 mt-1">Sign in to your OnRamp account</p>
       </div>
-
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
           <label className="label">Email</label>
           <div className="relative">
             <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="input pl-9"
-              placeholder="you@example.com"
-              required
-            />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input pl-9" placeholder="you@example.com" required />
           </div>
         </div>
-
         <div>
           <label className="label">Password</label>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="input pl-9"
-              placeholder="••••••••"
-              required
-            />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input pl-9" placeholder="••••••••" required />
           </div>
         </div>
-
         <button type="submit" disabled={loading} className="btn-primary w-full justify-center mt-6">
           {loading ? <Loader2 size={16} className="animate-spin" /> : null}
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
-
       <p className="text-sm text-zinc-500 text-center mt-6">
         No account?{' '}
-        <Link href="/register" className="text-brand-400 hover:text-brand-300 transition-colors">
-          Create one
-        </Link>
+        <Link href="/register" className="text-brand-400 hover:text-brand-300 transition-colors">Create one</Link>
       </p>
     </div>
   )

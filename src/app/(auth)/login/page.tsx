@@ -41,7 +41,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
+        redirectTo: 'https://brizlab-hub.vercel.app/reset-password',
       })
       if (error) throw error
       toast.success('Password reset email sent! Check your inbox.')

@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { toast } from 'sonner'
@@ -13,6 +13,31 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
+  const [ready, setReady] = useState(false)
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  )
+
+  useEffect(() => {
+    // Handle the hash fragment from Supabase reset email
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const accessToken = hashParams.get('access_token')
+    const refreshToken = hashParams.get('refresh_token')
+    const type = hashParams.get('type')
+
+    if (type === 'recovery' && accessToken) {
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || '',
+      }).then(() => {
+        setReady(true)
+      })
+    } else {
+      setReady(true)
+    }
+  }, [])
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault()
@@ -22,14 +47,10 @@ export default function ResetPasswordPage() {
     }
     setLoading(true)
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-      )
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
-      toast.success('Password updated! Signing you in...')
-      router.push('/dashboard')
+      toast.success('Password updated successfully!')
+      setTimeout(() => router.push('/login'), 2000)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to reset password')
     } finally {
